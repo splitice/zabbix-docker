@@ -132,7 +132,17 @@ RUN set -eux && \
             --with-unixodbc \
             --enable-ipv6 \
             --silent && \
-    make -j"$(nproc)" -s dbschema && \
+     make -j"$(nproc)" -s dbschema 1>/dev/null
+
+ # Patch ZBXNEXT-3089
+ # https://github.com/zabbix/zabbix-patches/blob/master/zabbix-3.4/ZBXNEXT-3089/ZBXNEXT-3089.patch
+ ADD patches/ZBXNEXT-3089/include/db.h /tmp/zabbix-${ZBX_VERSION}/include/
+ ADD patches/ZBXNEXT-3089/src/libs/zbxdbhigh/db.c /tmp/zabbix-${ZBX_VERSION}/src/libs/zbxdbhigh/
+ ADD patches/ZBXNEXT-3089/database/mysql/schema.sql /tmp/zabbix-${ZBX_VERSION}/database/mysql/schema.sql
+
+ RUN cd /tmp/zabbix-${ZBX_VERSION} && \
+
+    make -j"$(nproc)" -s dbschema 1>/dev/null && \
     make -j"$(nproc)" -s && \
     cp src/zabbix_${ZBX_TYPE}/zabbix_${ZBX_TYPE} /usr/sbin/zabbix_${ZBX_TYPE} && \
     cp src/zabbix_get/zabbix_get /usr/bin/zabbix_get && \
